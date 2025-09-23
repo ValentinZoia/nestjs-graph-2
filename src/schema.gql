@@ -9,16 +9,45 @@ type UserEntity {
   password: String!
 }
 
+type UserAuthEntity {
+  id: Int!
+  name: String!
+  email: String!
+}
+
+type SignResponse {
+  accessToken: String!
+  refreshToken: String!
+  user: UserAuthEntity!
+}
+
 type Query {
-  users: [UserEntity!]!
+  users: [UserAuthEntity!]!
+  user(id: Float!): UserAuthEntity!
 }
 
 type Mutation {
   createUser(user: CreateUserInput!): UserEntity!
+  signup(signUpInput: SignUpInput!): SignResponse!
+  updateUser(updateAuthInput: UpdateAuthInput!): UserAuthEntity!
+  removeUser(id: Int!): String!
 }
 
 input CreateUserInput {
   name: String!
   email: String!
   password: String!
+}
+
+input SignUpInput {
+  name: String!
+  email: String!
+  password: String!
+}
+
+input UpdateAuthInput {
+  name: String
+  email: String
+  password: String
+  id: Int!
 }
