@@ -1,0 +1,15 @@
+version: '3.1'
+services:
+  nest-graph_pg:
+    image: postgres:17.6
+    container_name: nest-graph_pg
+    restart: always
+    environment:
+      TZ: America/Argentina/Buenos_Aires
+      POSTGRES_USER: valenzo
+      POSTGRES_PASSWORD: nest123
+      POSTGRES_DB: nestgraphdb
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - 5432:5432
