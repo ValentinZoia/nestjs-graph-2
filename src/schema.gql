@@ -21,16 +21,19 @@ type SignResponse {
   user: UserAuthEntity!
 }
 
+type LogoutResponse {
+  loggedOut: Boolean!
+}
+
 type Query {
-  users: [UserAuthEntity!]!
-  user(id: Float!): UserAuthEntity!
+  users: [UserEntity!]!
 }
 
 type Mutation {
   createUser(user: CreateUserInput!): UserEntity!
   signup(signUpInput: SignUpInput!): SignResponse!
-  updateUser(updateAuthInput: UpdateAuthInput!): UserAuthEntity!
-  removeUser(id: Int!): String!
+  login(logInInput: LogInInput!): SignResponse!
+  logout(id: Int!): LogoutResponse!
 }
 
 input CreateUserInput {
@@ -45,9 +48,7 @@ input SignUpInput {
   password: String!
 }
 
-input UpdateAuthInput {
-  name: String
-  email: String
-  password: String
-  id: Int!
+input LogInInput {
+  email: String!
+  password: String!
 }

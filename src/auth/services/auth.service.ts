@@ -1,4 +1,4 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { ForbiddenException, HttpException, Injectable } from '@nestjs/common';
 import { SignUpInput } from '../dto/signup.input';
 import { UpdateAuthInput } from '../dto/update-auth.input';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -7,6 +7,8 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as argon from 'argon2';
 import { SignResponse } from '../dto/sign-response';
+import { LogInInput } from '../dto/login.input';
+import { LogoutResponse } from '../dto/logout-response';
 
 @Injectable()
 export class AuthService {
@@ -19,15 +21,21 @@ export class AuthService {
   async signup(user: SignUpInput): Promise<SignResponse> {
     try {
       //1 Verificar que no exsitan usuarios con el mismo email/username
-      const findUser = await this.prisma.user.findUnique({
+      const findUserByEmail = await this.prisma.user.findUnique({
         where: {
-          name_email: {
-            name: user.name,
-            email: user.email,
-          },
+          email: user.email,
         },
       });
-      if (findUser) {
+      if (findUserByEmail) {
+        throw new HttpException('User already exists', 400);
+      }
+
+      const findUserByUsername = await this.prisma.user.findUnique({
+        where: {
+          name: user.name,
+        },
+      });
+      if (findUserByUsername) {
         throw new HttpException('User already exists', 400);
       }
 
@@ -39,14 +47,19 @@ export class AuthService {
         data: user,
       });
 
+      // 4 - Generar el token
       const { accessToken, refreshToken } = await this.createTokens(
         createdUser.id,
         createdUser.email,
       );
 
+      // 5 - Guardar el refresh token
       await this.updateRefreshToken(createdUser.id, refreshToken);
+
+      // 6 - Quitar password para la respuesta
       const { password, ...userResult } = createdUser;
 
+      // 7 - Devolver el token y usuario
       return {
         accessToken,
         refreshToken,
@@ -57,63 +70,65 @@ export class AuthService {
     }
   }
 
-  async findAll(): Promise<UserAuthEntity[]> {
+  async login(credentials: LogInInput): Promise<SignResponse> {
     try {
-      return await this.prisma.user.findMany();
-    } catch (error) {
-      throw new HttpException(error, 500);
-    }
-  }
-
-  async findOne(id: number): Promise<UserAuthEntity> {
-    try {
-      const findUser = await this.prisma.user.findUnique({
+      // 1. Verificar que exista un usuario con ese email
+      const existingUser = await this.prisma.user.findUnique({
         where: {
-          id: id,
+          email: credentials.email,
         },
       });
 
-      if (!findUser) {
-        throw new HttpException('User not found', 404);
+      if (!existingUser) {
+        throw new ForbiddenException('Credentials not valid');
       }
 
-      return findUser;
+      // 2 - Comparar las contraseñas
+      const isPasswordValid = await argon.verify(
+        existingUser.password,
+        credentials.password,
+      );
+
+      if (!isPasswordValid) {
+        throw new ForbiddenException('Credentials not valid');
+      }
+
+      // 3 - Generar el token
+      const { accessToken, refreshToken } = await this.createTokens(
+        existingUser.id,
+        existingUser.email,
+      );
+
+      // 4 - Guardar el refresh token
+      await this.updateRefreshToken(existingUser.id, refreshToken);
+
+      // 5 - Quitar password para la respuesta
+      const { password, ...userResult } = existingUser;
+
+      // 6 - Devolver el token y usuario
+      return {
+        accessToken,
+        refreshToken,
+        user: userResult,
+      };
     } catch (error) {
       throw new HttpException(error, 500);
     }
   }
 
-  async update(
-    id: number,
-    updateAuthInput: UpdateAuthInput,
-  ): Promise<UserAuthEntity> {
+  async logout(userId: number): Promise<LogoutResponse> {
     try {
-      // Extraer id del input y quedarse solo con los campos actualizables
-      const { id: inputId, ...dataToUpdate } = updateAuthInput;
-
-      const updatedUser = await this.prisma.user.update({
-        where: { id },
-        data: dataToUpdate,
+      await this.prisma.user.updateMany({
+        where: {
+          id: userId,
+          refreshToken: { not: null }, // solo si hay un refresh token
+        },
+        data: { refreshToken: null },
       });
-      return updatedUser;
-    } catch (error) {
-      // Prisma lanza PrismaClientKnownRequestError si el registro no existe
-      if (error.code === 'P2025') {
-        throw new HttpException('User not found', 404);
-      }
-      throw new HttpException(error.message, 500);
-    }
-  }
 
-  async remove(id: number): Promise<Boolean> {
-    try {
-      return (await this.prisma.user.delete({ where: { id } })) ? true : false;
+      return { loggedOut: true };
     } catch (error) {
-      // Prisma lanza PrismaClientKnownRequestError si el registro no existe
-      if (error.code === 'P2025') {
-        throw new HttpException('User not found', 404);
-      }
-      throw new HttpException(error.message, 500);
+      throw new HttpException(error, 500);
     }
   }
 

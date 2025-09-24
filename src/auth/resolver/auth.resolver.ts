@@ -4,20 +4,12 @@ import { AuthService } from '../services/auth.service';
 import { SignUpInput } from '../dto/signup.input';
 import { UpdateAuthInput } from '../dto/update-auth.input';
 import { SignResponse } from '../dto/sign-response';
+import { LogInInput } from '../dto/login.input';
+import { LogoutResponse } from '../dto/logout-response';
 
 @Resolver(() => UserAuthEntity)
 export class AuthResolver {
   constructor(private readonly authService: AuthService) {}
-
-  @Query(() => [UserAuthEntity])
-  async users(): Promise<UserAuthEntity[]> {
-    return await this.authService.findAll();
-  }
-
-  @Query(() => UserAuthEntity)
-  async user(@Args('id') id: number): Promise<UserAuthEntity> {
-    return await this.authService.findOne(id);
-  }
 
   @Mutation(() => SignResponse, { name: 'signup' })
   async signup(
@@ -27,21 +19,37 @@ export class AuthResolver {
     return await this.authService.signup(user);
   }
 
-  @Mutation(() => UserAuthEntity)
-  async updateUser(
-    @Args('updateAuthInput', { type: () => UpdateAuthInput })
-    user: UpdateAuthInput,
-  ): Promise<UserAuthEntity> {
-    return await this.authService.update(user.id, user);
+  @Mutation(() => SignResponse, { name: 'login' })
+  async login(
+    @Args('logInInput', { type: () => LogInInput })
+    credentials: LogInInput,
+  ): Promise<SignResponse> {
+    return await this.authService.login(credentials);
   }
 
-  @Mutation(() => String)
-  async removeUser(
-    @Args('id', { type: () => Int }) id: number,
-  ): Promise<String> {
-    const mjs = (await this.authService.remove(id))
-      ? 'User deleted'
-      : 'User not found';
-    return mjs;
+  @Mutation(() => LogoutResponse, { name: 'logout' })
+  async logout(
+    @Args('id', { type: () => Int })
+    id: number,
+  ): Promise<LogoutResponse> {
+    return await this.authService.logout(id);
   }
+
+  // @Mutation(() => UserAuthEntity)
+  // async updateUser(
+  //   @Args('updateAuthInput', { type: () => UpdateAuthInput })
+  //   user: UpdateAuthInput,
+  // ): Promise<UserAuthEntity> {
+  //   return await this.authService.update(user.id, user);
+  // }
+
+  // @Mutation(() => String)
+  // async removeUser(
+  //   @Args('id', { type: () => Int }) id: number,
+  // ): Promise<String> {
+  //   const mjs = (await this.authService.remove(id))
+  //     ? 'User deleted'
+  //     : 'User not found';
+  //   return mjs;
+  // }
 }
