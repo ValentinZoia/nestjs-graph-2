@@ -6,11 +6,18 @@ import { UpdateAuthInput } from '../dto/update-auth.input';
 import { SignResponse } from '../dto/sign-response';
 import { LogInInput } from '../dto/login.input';
 import { LogoutResponse } from '../dto/logout-response';
+import { PublicAccess } from '../decorators/public.decorator';
+import { NewTokensResponse } from '../dto/newTokensResponse';
+import { CurrentUserId } from '../decorators/currentUserId.decorator';
+import { CurrentUser } from '../decorators/currentUser.decorator';
+import { UseGuards } from '@nestjs/common';
+import { RefreshTokenGuard } from '../guards/refreshToken.guard';
 
 @Resolver(() => UserAuthEntity)
 export class AuthResolver {
   constructor(private readonly authService: AuthService) {}
 
+  @PublicAccess()
   @Mutation(() => SignResponse, { name: 'signup' })
   async signup(
     @Args('signUpInput', { type: () => SignUpInput })
@@ -19,6 +26,7 @@ export class AuthResolver {
     return await this.authService.signup(user);
   }
 
+  @PublicAccess()
   @Mutation(() => SignResponse, { name: 'login' })
   async login(
     @Args('logInInput', { type: () => LogInInput })
@@ -33,6 +41,24 @@ export class AuthResolver {
     id: number,
   ): Promise<LogoutResponse> {
     return await this.authService.logout(id);
+  }
+
+  // @PublicAccess()
+  @Query(() => String, { name: 'hello' })
+  async hello(): Promise<String> {
+    return 'hello';
+  }
+
+  @PublicAccess()
+  @UseGuards(RefreshTokenGuard)
+  @Mutation(() => NewTokensResponse, { name: 'getNewTokens' })
+  async getNewTokens(
+    @CurrentUserId()
+    userId: number,
+    @CurrentUser('refreshToken')
+    rt: string,
+  ): Promise<NewTokensResponse> {
+    return await this.authService.getNewTokens(userId, rt);
   }
 
   // @Mutation(() => UserAuthEntity)

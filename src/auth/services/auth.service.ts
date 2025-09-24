@@ -9,6 +9,7 @@ import * as argon from 'argon2';
 import { SignResponse } from '../dto/sign-response';
 import { LogInInput } from '../dto/login.input';
 import { LogoutResponse } from '../dto/logout-response';
+import { NewTokensResponse } from '../dto/newTokensResponse';
 
 @Injectable()
 export class AuthService {
@@ -139,7 +140,7 @@ export class AuthService {
         email: email,
       },
       {
-        expiresIn: '10s',
+        expiresIn: '3h',
         secret: this.configService.get('ACCESS_JWT_SECRET'),
       },
     );
@@ -168,5 +169,30 @@ export class AuthService {
       where: { id: userId },
       data: { refreshToken: hashedRefreshToken },
     });
+  }
+
+  async getNewTokens(userId: number, rt: string): Promise<NewTokensResponse> {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+      });
+      if (!user || !user.refreshToken)
+        throw new ForbiddenException('Access Denied');
+      const rtMatches = await argon.verify(user.refreshToken, rt);
+      if (!rtMatches) throw new ForbiddenException('Access Denied');
+
+      const { accessToken, refreshToken } = await this.createTokens(
+        user.id,
+        user.email,
+      );
+      await this.updateRefreshToken(user.id, refreshToken);
+
+      return {
+        accessToken,
+        refreshToken,
+      };
+    } catch (error) {
+      throw new HttpException(error, 500);
+    }
   }
 }

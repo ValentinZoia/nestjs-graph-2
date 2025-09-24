@@ -6,6 +6,9 @@ import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
+import { PrismaService } from './prisma/prisma.service';
+import { APP_GUARD } from '@nestjs/core';
+import { AccessTokenGuard } from './auth/guards/accessToken.guard';
 
 @Module({
   imports: [
@@ -18,6 +21,10 @@ import { ConfigModule } from '@nestjs/config';
     }),
     UserModule,
     AuthModule,
+  ],
+  providers: [
+    PrismaService,
+    { provide: APP_GUARD, useClass: AccessTokenGuard }, // para usar el guard en todos los controladores/resolvers
   ],
 })
 export class AppModule {}
