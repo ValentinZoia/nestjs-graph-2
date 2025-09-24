@@ -2,7 +2,6 @@ import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { UserAuthEntity } from '../entities/auth.entity';
 import { AuthService } from '../services/auth.service';
 import { SignUpInput } from '../dto/signup.input';
-import { UpdateAuthInput } from '../dto/update-auth.input';
 import { SignResponse } from '../dto/sign-response';
 import { LogInInput } from '../dto/login.input';
 import { LogoutResponse } from '../dto/logout-response';
@@ -41,6 +40,13 @@ export class AuthResolver {
     id: number,
   ): Promise<LogoutResponse> {
     return await this.authService.logout(id);
+  }
+
+  // @PublicAccess()
+  // @UseGuards(RefreshTokenGuard)
+  @Query(() => String, { name: 'me' })
+  async me(@CurrentUserId() userId: string): Promise<String> {
+    return userId;
   }
 
   // @PublicAccess()

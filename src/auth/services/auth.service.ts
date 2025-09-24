@@ -10,6 +10,7 @@ import { SignResponse } from '../dto/sign-response';
 import { LogInInput } from '../dto/login.input';
 import { LogoutResponse } from '../dto/logout-response';
 import { NewTokensResponse } from '../dto/newTokensResponse';
+import { JwtPayload } from '../types';
 
 @Injectable()
 export class AuthService {
@@ -138,7 +139,7 @@ export class AuthService {
       {
         sub: userId,
         email: email,
-      },
+      } as JwtPayload,
       {
         expiresIn: '3h',
         secret: this.configService.get('ACCESS_JWT_SECRET'),
