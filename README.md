@@ -25,6 +25,45 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
+## 📌 Project Description
+This project is a backend application built with NestJS and GraphQL that demonstrates a modern, production-grade architecture for building APIs. It integrates authentication, authorization, database persistence, and testing—showcasing strong backend engineering skills.
+
+### 🔑 Key Features
+- NestJS with GraphQL (Apollo Server)
+  -  Code-first approach with automatic schema generation.
+  -  Queries and mutations for managing ``Users`` and authentication flows.
+- Authentication & Authorization
+  -  Secure JWT-based authentication with access & refresh tokens.
+  -  Global guards (``AccessTokenGuard``) applied to protect resolvers.
+- Database Integration
+  -  Secure JWT-based authentication with access & refresh tokens.
+  -  Entities such as ``UserEntity`` and ``UserAuthEntity`` with input DTOs for validation.
+- Security & Best Practices
+  - Password hashing with argon2.
+  -  Input validation using class-validator and class-transformer.
+  -  Configurable environment variables via @nestjs/config.
+- Testing & Code Quality
+  -  Unit and e2e testing with Jest and Supertest.
+  -  ESLint + Prettier for linting and formatting.
+- Developer Experience
+  -  Apollo Sandbox integration for GraphQL queries.
+  -  Hot-reload with ``start:dev``.
+  -  Modular, scalable codebase with clear separation of concerns (``AuthModule``, ``UserModule``).
+
+### 🚀 Skills & Frameworks Highlighted
+- Frameworks & Languages: NestJS, TypeScript, GraphQL, Apollo Server.
+
+- Authentication: JWT, Passport strategies, Guards & Interceptors.
+
+- Databases & ORMs: PostgreSQL, Prisma ORM, database migrations.
+
+- Security: Hashing (argon2), validation, role-based access control patterns.
+
+- Testing: Jest, Supertest, unit and e2e testing.
+
+- Dev Tools & Practices: ESLint, Prettier, CI-friendly scripts.
+
+
 ## Project setup
 
 ```bash
